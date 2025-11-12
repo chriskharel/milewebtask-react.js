@@ -198,8 +198,30 @@
     grid-template-areas: 'panel-image' 'panel-content';
   }
 
-  .panel--right {
-    /* For future use if needed */
+  .panel--left .panel__content {
+    @apply items-start text-left;
+  }
+
+  .panel--right .panel__content {
+    @apply items-end text-right;
+  }
+
+  @media screen and (min-width: 40em) {
+    .panel {
+      grid-template-rows: 100%;
+      grid-template-columns: var(--panel-img-size) 1fr;
+      grid-template-areas: 'panel-image panel-content';
+    }
+
+    .panel--left {
+      grid-template-columns: 1fr var(--panel-img-size);
+      grid-template-areas: 'panel-content panel-image';
+    }
+
+    .panel--right {
+      grid-template-columns: var(--panel-img-size) 1fr;
+      grid-template-areas: 'panel-image panel-content';
+    }
   }
 
   .panel__img {

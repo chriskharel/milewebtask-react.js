@@ -3,7 +3,7 @@ import React from 'react';
 const ImageGrid = ({ items, onItemClick, animationConfig }) => {
   const handleItemClick = (item, event) => {
     const target = event.currentTarget;
-    onItemClick(item, target, animationConfig);
+    onItemClick(item, target, event);
   };
 
   return (

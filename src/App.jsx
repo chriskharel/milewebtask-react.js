@@ -13,6 +13,7 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [panelLayout, setPanelLayout] = useState('right'); // 'left' or 'right'
   
   const animationSystem = useRef(new RepeatingImageTransition());
 
@@ -39,11 +40,17 @@ function App() {
     };
   }, []);
 
-  const handleItemClick = async (item, clickedElement, animationConfig = {}) => {
+  const handleItemClick = async (item, clickedElement, animationConfig = {}, event) => {
     if (isAnimating) return;
     
     setIsAnimating(true);
     setSelectedItem(item);
+    
+    // Detect click position to determine panel layout
+    const clickX = event.clientX;
+    const viewportWidth = window.innerWidth;
+    const isLeftSide = clickX < viewportWidth / 2;
+    setPanelLayout(isLeftSide ? 'left' : 'right');
     
     // Read data attributes from clicked element and merge with section config
     const dataConfig = {
@@ -60,7 +67,8 @@ function App() {
       clipPathDirection: clickedElement.dataset.clipPathDirection,
       autoAdjustHorizontalClipPath: clickedElement.dataset.autoAdjustHorizontalClipPath === 'true',
       panelRevealDurationFactor: clickedElement.dataset.panelRevealDurationFactor ? parseFloat(clickedElement.dataset.panelRevealDurationFactor) : undefined,
-      moverBlendMode: clickedElement.dataset.moverBlendMode || false
+      moverBlendMode: clickedElement.dataset.moverBlendMode || false,
+      wobbleStrength: clickedElement.dataset.wobbleStrength ? parseFloat(clickedElement.dataset.wobbleStrength) : undefined,
     };
     
     // Remove undefined values and merge with section config
@@ -80,10 +88,13 @@ function App() {
     const allGridItems = Array.from(document.querySelectorAll('.grid__item'));
     const otherGridItems = allGridItems.filter(el => el !== clickedElement);
     
+    // Get frame elements (header and footer)
+    const frameElements = Array.from(document.querySelectorAll('.frame, .heading'));
+    
     const panelElement = document.querySelector('.panel');
     
     if (panelElement) {
-      await animationSystem.current.animateToPanel(clickedElement, panelElement, otherGridItems);
+      await animationSystem.current.animateToPanel(clickedElement, panelElement, otherGridItems, frameElements);
     }
     
     setIsPanelOpen(true);
@@ -99,8 +110,11 @@ function App() {
     const allGridItems = Array.from(document.querySelectorAll('.grid__item'));
     const panelElement = document.querySelector('.panel');
     
+    // Get frame elements (header and footer)
+    const frameElements = Array.from(document.querySelectorAll('.frame, .heading'));
+    
     if (panelElement) {
-      await animationSystem.current.animateToGrid(panelElement, allGridItems);
+      await animationSystem.current.animateToGrid(panelElement, allGridItems, frameElements);
     }
     
     setIsPanelOpen(false);
@@ -128,7 +142,7 @@ function App() {
             <Heading title={section.title} meta={section.meta} />
             <ImageGrid 
               items={section.items} 
-              onItemClick={(item, element) => handleItemClick(item, element, section.animationConfig)}
+              onItemClick={(item, element, event) => handleItemClick(item, element, section.animationConfig, event)}
               animationConfig={section.animationConfig}
             />
           </React.Fragment>
@@ -137,6 +151,7 @@ function App() {
           item={selectedItem}
           isOpen={isPanelOpen}
           onClose={handleClosePanel}
+          layout={panelLayout}
         />
         <Footer />
       </main>

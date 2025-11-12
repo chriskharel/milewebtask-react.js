@@ -14,6 +14,11 @@ const Header = () => {
         <a className="line" href="https://tympanus.net/codrops/demos/?tag=repetition">repetition,</a>
         <a className="line" href="https://tympanus.net/codrops/demos/?tag=grid">grid</a>
       </nav>
+      <div id="cdawrap" style={{ gridArea: 'sponsor' }}>
+        <a href="https://spline.design" className="line" target="_blank" rel="noopener noreferrer">
+          Design, animate, and ship real-time 3D experiences with Spline.
+        </a>
+      </div>
     </header>
   );
 };
