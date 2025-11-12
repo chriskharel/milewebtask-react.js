@@ -61,7 +61,6 @@ function getPathPosition(start, end, progress, config, moverIndex = 0) {
     // Create a sine wave arc perpendicular to the direction of travel
     const dx = end.x - start.x;
     const dy = end.y - start.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
     const angle = Math.atan2(dy, dx);
     
     // Perpendicular direction
