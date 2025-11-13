@@ -1,22 +1,20 @@
 import React, { useRef, useEffect } from 'react';
 import { panelContent } from '../data/imageData.js';
 
-const ImagePanel = ({ item, isOpen, onClose, layout = 'right' }) => {
+const ImagePanel = ({ item, isOpen, onClose }) => {
   const panelRef = useRef(null);
 
   useEffect(() => {
     if (panelRef.current) {
       if (isOpen) {
         // Panel will be animated by the animation system
-        // Update panel class based on layout
-        panelRef.current.className = `panel panel--${layout}`;
       } else {
         // Hide panel when not open
         panelRef.current.style.opacity = '0';
         panelRef.current.style.pointerEvents = 'none';
       }
     }
-  }, [isOpen, layout]);
+  }, [isOpen]);
 
   if (!item) return null;
 
@@ -25,7 +23,7 @@ const ImagePanel = ({ item, isOpen, onClose, layout = 'right' }) => {
   const displayDescription = item.id === 1 ? panelContent.description : null;
 
   return (
-    <figure ref={panelRef} className={`panel panel--${layout}`} role="img" aria-labelledby="panel-caption">
+    <figure ref={panelRef} className="panel" role="img" aria-labelledby="panel-caption">
       <div
         className="panel__img"
         style={{ backgroundImage: `url(${item.imageUrl})` }}

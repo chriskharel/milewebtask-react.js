@@ -7,13 +7,13 @@ import Footer from './components/Footer.jsx';
 import { sections } from './data/imageData.js';
 import { useSmoothScroll } from './hooks/useSmoothScroll.js';
 import { RepeatingImageTransition } from './utils/animations.js';
+import { preloadImages } from './utils/utils.js';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [panelLayout, setPanelLayout] = useState('right'); // 'left' or 'right'
   
   const animationSystem = useRef(new RepeatingImageTransition());
 
@@ -27,30 +27,23 @@ function App() {
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
     
-    // Simulate loading time
-    const timer = setTimeout(() => {
+    // Preload images then initialize
+    preloadImages('.grid__item-image, .panel__img').then(() => {
       setIsLoading(false);
       document.body.classList.remove('loading');
-    }, 1500);
+    });
 
     return () => {
-      clearTimeout(timer);
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     };
   }, []);
 
-  const handleItemClick = async (item, clickedElement, animationConfig = {}, event) => {
+  const handleItemClick = async (item, clickedElement, animationConfig = {}) => {
     if (isAnimating) return;
     
     setIsAnimating(true);
     setSelectedItem(item);
-    
-    // Detect click position to determine panel layout
-    const clickX = event.clientX;
-    const viewportWidth = window.innerWidth;
-    const isLeftSide = clickX < viewportWidth / 2;
-    setPanelLayout(isLeftSide ? 'left' : 'right');
     
     // Read data attributes from clicked element and merge with section config
     const dataConfig = {
@@ -142,7 +135,7 @@ function App() {
             <Heading title={section.title} meta={section.meta} />
             <ImageGrid 
               items={section.items} 
-              onItemClick={(item, element, event) => handleItemClick(item, element, section.animationConfig, event)}
+              onItemClick={(item, element) => handleItemClick(item, element, section.animationConfig)}
               animationConfig={section.animationConfig}
             />
           </React.Fragment>
@@ -151,7 +144,6 @@ function App() {
           item={selectedItem}
           isOpen={isPanelOpen}
           onClose={handleClosePanel}
-          layout={panelLayout}
         />
         <Footer />
       </main>
