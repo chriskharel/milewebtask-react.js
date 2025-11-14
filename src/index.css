@@ -211,6 +211,7 @@
     @apply bg-cover bg-center w-full h-auto;
     grid-area: panel-image;
     aspect-ratio: 4/5;
+    background-image: var(--bg-image, none);
   }
 
   .panel__content {
@@ -271,4 +272,5 @@
     }
   }
 }
+
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { gsap } from 'gsap';
 import Header from './components/Header.jsx';
 import Heading from './components/Heading.jsx';
 import ImageGrid from './components/ImageGrid.jsx';
@@ -43,7 +44,48 @@ function App() {
     if (isAnimating) return;
     
     setIsAnimating(true);
+    
+    // If panel is already open, reset it first
+    let panelElement = document.querySelector('.panel');
+    if (panelElement && isPanelOpen) {
+      // Kill any ongoing GSAP animations on the panel and related elements
+      gsap.killTweensOf(panelElement);
+      const panelImg = panelElement.querySelector('.panel__img');
+      const panelContent = panelElement.querySelector('.panel__content');
+      if (panelImg) gsap.killTweensOf(panelImg);
+      if (panelContent) gsap.killTweensOf(panelContent);
+      
+      // Reset panel state immediately
+      gsap.set(panelElement, { 
+        opacity: 0, 
+        pointerEvents: 'none'
+      });
+      if (panelImg) {
+        gsap.set(panelImg, {
+          clipPath: 'inset(0% 0% 100% 0%)'
+        });
+      }
+      if (panelContent) {
+        gsap.set(panelContent, {
+          opacity: 0,
+          y: 25
+        });
+      }
+      
+      // Wait a frame for cleanup
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    
     setSelectedItem(item);
+    setIsPanelOpen(true); // Set panel open immediately so it doesn't get hidden
+    
+    // Wait for React to render the panel with the new item
+    // Use requestAnimationFrame to ensure DOM is updated
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
     
     // Read data attributes from clicked element and merge with section config
     const dataConfig = {
@@ -84,14 +126,46 @@ function App() {
     // Get frame elements (header and footer)
     const frameElements = Array.from(document.querySelectorAll('.frame, .heading'));
     
-    const panelElement = document.querySelector('.panel');
+    // Wait for panel to be rendered and image to be set
+    panelElement = document.querySelector('.panel');
+    let panelImg = panelElement?.querySelector('.panel__img');
+    let attempts = 0;
+    const maxAttempts = 30;
+    const expectedImageUrl = item.imageUrl;
     
-    if (panelElement) {
-      await animationSystem.current.animateToPanel(clickedElement, panelElement, otherGridItems, frameElements);
+    // Wait for panel image to be rendered with background image
+    while ((!panelElement || !panelImg || !panelImg.style.backgroundImage || 
+            (!panelImg.style.backgroundImage.includes(expectedImageUrl) && 
+             panelImg.getAttribute('data-image-url') !== expectedImageUrl)) && attempts < maxAttempts) {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      panelElement = document.querySelector('.panel');
+      panelImg = panelElement?.querySelector('.panel__img');
+      attempts++;
     }
     
-    setIsPanelOpen(true);
-    setIsAnimating(false);
+    // Ensure image is set before animation - match original implementation
+    if (panelElement && panelImg) {
+      // Set background image directly like in original (line 232: panel.querySelector('.panel__img').style.backgroundImage = imgURL;)
+      panelImg.style.backgroundImage = `url(${expectedImageUrl})`;
+      
+      // Verify the element is still in the DOM before animating
+      if (!document.body.contains(panelElement)) {
+        console.error('Panel element removed from DOM before animation');
+        setIsAnimating(false);
+        return;
+      }
+      
+      try {
+        await animationSystem.current.animateToPanel(clickedElement, panelElement, otherGridItems, frameElements);
+        setIsAnimating(false);
+      } catch (error) {
+        console.error('Animation error:', error);
+        setIsAnimating(false);
+      }
+    } else {
+      console.error('Panel or panel image not found after waiting');
+      setIsAnimating(false);
+    }
   };
 
   const handleClosePanel = useCallback(async () => {

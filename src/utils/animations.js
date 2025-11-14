@@ -169,7 +169,17 @@ export class RepeatingImageTransition {
   }
 
   async animateToPanel(gridItem, panel, otherGridItems, frameElements = []) {
-    if (this.isAnimating) return;
+    // Always kill any ongoing animations first to prevent conflicts
+    if (this.isAnimating) {
+      gsap.killTweensOf(panel);
+      const panelImg = panel.querySelector('.panel__img');
+      const panelContent = panel.querySelector('.panel__content');
+      if (panelImg) gsap.killTweensOf(panelImg);
+      if (panelContent) gsap.killTweensOf(panelContent);
+      if (otherGridItems && otherGridItems.length > 0) {
+        gsap.killTweensOf(otherGridItems);
+      }
+    }
     this.isAnimating = true;
     this.currentItem = gridItem;
 
@@ -287,6 +297,12 @@ export class RepeatingImageTransition {
 
     // Reveal panel
     const panelContent = panel.querySelector('.panel__content');
+    
+    // Set panel content directly like in original (line 231-235 of original index.js)
+    // The original sets: panel.querySelector('.panel__img').style.backgroundImage = imgURL;
+    panelImg.style.backgroundImage = imgURL;
+    
+    // Ensure panel and image are in correct initial state
     gsap.set(panelContent, { opacity: 0 });
     gsap.set(panel, { opacity: 1, pointerEvents: 'auto' });
 
